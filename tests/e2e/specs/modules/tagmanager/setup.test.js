@@ -126,6 +126,105 @@ describe( 'Tag Manager module setup', () => {
 			await deactivatePlugin( 'amp' );
 		} );
 
+		it( 'displays available accounts and containers for the chosen account', async () => {
+			await activatePlugin(
+				'e2e-tests-module-setup-tagmanager-api-mock'
+			);
+			await proceedToTagManagerSetup();
+
+			// Ensure only web container select is shown.
+			await expect( page ).toMatchElement(
+				'.googlesitekit-tagmanager__select-container--web'
+			);
+			await expect( page ).not.toMatchElement(
+				'.googlesitekit-tagmanager__select-container--amp'
+			);
+
+			// Ensure account and container are not yet selected.
+			await expect(
+				page
+			).toMatchElement(
+				'.googlesitekit-tagmanager__select-account .mdc-select__selected-text',
+				{ text: '' }
+			);
+			await expect(
+				page
+			).toMatchElement(
+				'.googlesitekit-tagmanager__select-container .mdc-select__selected-text',
+				{ text: '' }
+			);
+
+			// Ensure choosing an account loads the proper values.
+			await expect( page ).toClick(
+				'.googlesitekit-tagmanager__select-account'
+			);
+			await Promise.all( [
+				page.waitForResponse( ( res ) =>
+					res.url().match( 'modules/tagmanager/data' )
+				),
+				expect( page ).toClick(
+					'.mdc-menu-surface--open .mdc-list-item',
+					{
+						text: /test account b/i,
+					}
+				),
+			] );
+
+			// Ensure account is selected.
+			await expect(
+				page
+			).toMatchElement(
+				'.googlesitekit-tagmanager__select-account .mdc-select__selected-text',
+				{ text: /test account b/i }
+			);
+
+			// Select a container.
+			await expect( page ).toClick(
+				'.googlesitekit-tagmanager__select-container'
+			);
+			// Ensure no AMP containers are shown as options.
+			// expect(...).not.toMatchElement with textContent matching does not work as expected.
+			await expect(
+				await page.$$eval(
+					'.mdc-menu-surface--open .mdc-list-item',
+					( nodes ) =>
+						!! nodes.find( ( e ) =>
+							e.textContent.match( /test amp container/i )
+						)
+				)
+			).toStrictEqual( false );
+			await expect( page ).toClick(
+				'.mdc-menu-surface--open .mdc-list-item',
+				{
+					text: /test container y/i,
+				}
+			);
+
+			await pageWait( 1000 );
+			await expect( page ).toClick( 'button', {
+				text: /confirm \& continue/i,
+			} );
+
+			await page.waitForSelector(
+				'.googlesitekit-publisher-win--win-success'
+			);
+			await expect( page ).toMatchElement(
+				'.googlesitekit-publisher-win__title',
+				{
+					text: /Congrats on completing the setup for Tag Manager!/i,
+				}
+			);
+
+			// Ensure expected tag is placed.
+			await Promise.all( [
+				page.goto( createURL( '/' ) ),
+				page.waitForNavigation(),
+			] );
+			await expect( page ).toMatchElement(
+				'script[src^="https://www.googletagmanager.com/gtm.js?id=GTM-BCDWXY"]'
+			);
+		} );
+
 		it( 'displays account creation form when user has no Tag Manager account', async () => {
 			await activatePlugin(
 				'e2e-tests-module-setup-tagmanager-api-mock-no-account'
@@ -231,105 +330,6 @@ describe( 'Tag Manager module setup', () => {
 			] );
 			await expect( page ).toMatchElement(
 				'script[src^="https://www.googletagmanager.com/gtm.js?id=GTM-ABCXYZ"]'
-			);
-		} );
-
-		it( 'displays available accounts and containers for the chosen account', async () => {
-			await activatePlugin(
-				'e2e-tests-module-setup-tagmanager-api-mock'
-			);
-			await proceedToTagManagerSetup();
-
-			// Ensure only web container select is shown.
-			await expect( page ).toMatchElement(
-				'.googlesitekit-tagmanager__select-container--web'
-			);
-			await expect( page ).not.toMatchElement(
-				'.googlesitekit-tagmanager__select-container--amp'
-			);
-
-			// Ensure account and container are not yet selected.
-			await expect(
-				page
-			).toMatchElement(
-				'.googlesitekit-tagmanager__select-account .mdc-select__selected-text',
-				{ text: '' }
-			);
-			await expect(
-				page
-			).toMatchElement(
-				'.googlesitekit-tagmanager__select-container .mdc-select__selected-text',
-				{ text: '' }
-			);
-
-			// Ensure choosing an account loads the proper values.
-			await expect( page ).toClick(
-				'.googlesitekit-tagmanager__select-account'
-			);
-			await Promise.all( [
-				page.waitForResponse( ( res ) =>
-					res.url().match( 'modules/tagmanager/data' )
-				),
-				expect( page ).toClick(
-					'.mdc-menu-surface--open .mdc-list-item',
-					{
-						text: /test account b/i,
-					}
-				),
-			] );
-
-			// Ensure account is selected.
-			await expect(
-				page
-			).toMatchElement(
-				'.googlesitekit-tagmanager__select-account .mdc-select__selected-text',
-				{ text: /test account b/i }
-			);
-
-			// Select a container.
-			await expect( page ).toClick(
-				'.googlesitekit-tagmanager__select-container'
-			);
-			// Ensure no AMP containers are shown as options.
-			// expect(...).not.toMatchElement with textContent matching does not work as expected.
-			await expect(
-				await page.$$eval(
-					'.mdc-menu-surface--open .mdc-list-item',
-					( nodes ) =>
-						!! nodes.find( ( e ) =>
-							e.textContent.match( /test amp container/i )
-						)
-				)
-			).toStrictEqual( false );
-			await expect( page ).toClick(
-				'.mdc-menu-surface--open .mdc-list-item',
-				{
-					text: /test container y/i,
-				}
-			);
-
-			await pageWait( 1000 );
-			await expect( page ).toClick( 'button', {
-				text: /confirm \& continue/i,
-			} );
-
-			await page.waitForSelector(
-				'.googlesitekit-publisher-win--win-success'
-			);
-			await expect( page ).toMatchElement(
-				'.googlesitekit-publisher-win__title',
-				{
-					text: /Congrats on completing the setup for Tag Manager!/i,
-				}
-			);
-
-			// Ensure expected tag is placed.
-			await Promise.all( [
-				page.goto( createURL( '/' ) ),
-				page.waitForNavigation(),
-			] );
-			await expect( page ).toMatchElement(
-				'script[src^="https://www.googletagmanager.com/gtm.js?id=GTM-BCDWXY"]'
 			);
 		} );
 
