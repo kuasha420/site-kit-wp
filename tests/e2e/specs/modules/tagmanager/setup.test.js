@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-focused-tests */
 /**
  * TagManager module setup tests.
  *
@@ -234,7 +235,7 @@ describe( 'Tag Manager module setup', () => {
 			);
 		} );
 
-		it( 'displays available accounts and containers for the chosen account', async () => {
+		it.only( 'displays available accounts and containers for the chosen account', async () => {
 			await activatePlugin(
 				'e2e-tests-module-setup-tagmanager-api-mock'
 			);
@@ -403,7 +404,7 @@ describe( 'Tag Manager module setup', () => {
 				await setAMPMode( 'secondary' );
 			} );
 
-			it( 'renders both the AMP and web container select menus', async () => {
+			it.only( 'renders both the AMP and web container select menus', async () => {
 				await expect( page ).toMatchElement(
 					'.googlesitekit-tagmanager__select-container--web'
 				);
