@@ -424,45 +424,45 @@ describe( 'Tag Manager module setup', () => {
 				);
 			} );
 
-			describe( 'when validating', () => {
-				beforeEach( async () => {
-					await page.waitForSelector(
-						'.googlesitekit-tagmanager__select-account'
-					);
-					await expect( page ).toClick(
-						'.googlesitekit-tagmanager__select-account'
-					);
-					await expect( page ).toClick(
-						'.mdc-menu-surface--open .mdc-list-item',
-						{
-							text: /test account a/i,
-						}
-					);
-					await expect( page ).toClick( 'button:not(:disabled)', {
-						text: /confirm \& continue/i,
-					} );
-					await page.waitForSelector(
-						'.googlesitekit-publisher-win--win-success'
-					);
-					await expect( page ).toMatchElement(
-						'.googlesitekit-publisher-win__title',
-						{
-							text: /Congrats on completing the setup for Tag Manager!/i,
-						}
-					);
-					await page.goto( createURL( '/', 'amp' ), {
-						waitUntil: 'load',
-					} );
-				} );
+			// describe( 'when validating', () => {
+			// 	beforeEach( async () => {
+			// 		await page.waitForSelector(
+			// 			'.googlesitekit-tagmanager__select-account'
+			// 		);
+			// 		await expect( page ).toClick(
+			// 			'.googlesitekit-tagmanager__select-account'
+			// 		);
+			// 		await expect( page ).toClick(
+			// 			'.mdc-menu-surface--open .mdc-list-item',
+			// 			{
+			// 				text: /test account a/i,
+			// 			}
+			// 		);
+			// 		await expect( page ).toClick( 'button:not(:disabled)', {
+			// 			text: /confirm \& continue/i,
+			// 		} );
+			// 		await page.waitForSelector(
+			// 			'.googlesitekit-publisher-win--win-success'
+			// 		);
+			// 		await expect( page ).toMatchElement(
+			// 			'.googlesitekit-publisher-win__title',
+			// 			{
+			// 				text: /Congrats on completing the setup for Tag Manager!/i,
+			// 			}
+			// 		);
+			// 		await page.goto( createURL( '/', 'amp' ), {
+			// 			waitUntil: 'load',
+			// 		} );
+			// 	} );
 
-				it( 'validates homepage AMP for logged-in users', async () => {
-					await expect( page ).toHaveValidAMPForUser();
-				} );
+			// 	it( 'validates homepage AMP for logged-in users', async () => {
+			// 		await expect( page ).toHaveValidAMPForUser();
+			// 	} );
 
-				it( 'validates homepage AMP for non-logged-in users', async () => {
-					await expect( page ).toHaveValidAMPForVisitor();
-				} );
-			} );
+			// 	it( 'validates homepage AMP for non-logged-in users', async () => {
+			// 		await expect( page ).toHaveValidAMPForVisitor();
+			// 	} );
+			// } );
 		} );
 	} );
 } );
