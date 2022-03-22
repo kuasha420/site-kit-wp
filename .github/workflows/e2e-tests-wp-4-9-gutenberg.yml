@@ -80,7 +80,7 @@ jobs:
       WP_VERSION: 4.9.16
       GUTENBERG_VERSION: 4.9.0
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     if: github.event_name == 'push' || github.event.pull_request.draft == false
 
