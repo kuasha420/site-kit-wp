@@ -92,4 +92,11 @@ Object.entries( configsMapping ).forEach( ( [ envKey, argName ] ) => {
 
 const cleanUpPrefixes = [ '--puppeteer-', '--wordpress-' ];
 
-jest.run( [ ...config, ...runInBand, ...getArgsFromCLI( cleanUpPrefixes ) ] );
+const onlyTagManager = [ '-f', 'tagmanager/setup.test.js' ];
+
+jest.run( [
+	...config,
+	...runInBand,
+	...getArgsFromCLI( cleanUpPrefixes ),
+	...onlyTagManager,
+] );
