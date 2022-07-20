@@ -35,70 +35,6 @@ class Web_TagTest extends TestCase {
 		$this->web_tag->set_button_post_types( array( 'post' ) );
 	}
 
-	public function test_content_placeholder_not_inserted_on_unselected_button_post_types() {
-		remove_all_filters( 'the_content' );
-
-		$this->web_tag->set_button_placement( 'static_auto' );
-		$this->web_tag->register();
-
-		$post_ID = $this->factory()->post->create(
-			array(
-				'post_type'    => 'page',
-				'post_content' => '<p>Hello World</p><p>Goodbye World</p>',
-			)
-		);
-		$this->go_to( get_permalink( $post_ID ) );
-
-		$output = get_echo( 'the_content' );
-
-		$this->assertStringNotContainsString( 'Thank with Google snippet added by Site Kit', $output );
-		$this->assertStringNotContainsString( '<button twg-button', $output );
-	}
-
-	public function test_content_placeholder_inserted_on_button_post_types() {
-		remove_all_filters( 'the_content' );
-
-		$this->web_tag->set_button_placement( 'static_auto' );
-		$this->web_tag->register();
-
-		$this->create_post_and_go_to_it();
-
-		$output = get_echo( 'the_content' );
-
-		$this->assertStringContainsString( 'Thank with Google snippet added by Site Kit', $output );
-		$this->assertStringContainsString( '<button twg-button', $output );
-	}
-
-	public function test_content_placeholder_not_inserted_on_dynamic_button_placement() {
-		remove_all_filters( 'the_content' );
-
-		$this->web_tag->set_button_placement( 'dynamic_low' );
-		$this->web_tag->register();
-
-		$this->create_post_and_go_to_it();
-
-		$output = get_echo( 'the_content' );
-
-		$this->assertStringNotContainsString( 'Thank with Google snippet added by Site Kit', $output );
-		$this->assertStringNotContainsString( '<button twg-button', $output );
-	}
-
-	public function test_content_placeholder_inserted_static_below_content() {
-		remove_all_filters( 'the_content' );
-
-		$this->web_tag->set_button_placement( 'static_below-content' );
-		$this->web_tag->register();
-
-		$this->create_post_and_go_to_it();
-
-		$output  = get_echo( 'the_content' );
-		$content = get_the_content();
-
-		$this->assertStringStartsWith( $content, $output );
-		$this->assertStringContainsString( 'Thank with Google snippet added by Site Kit', $output );
-		$this->assertStringContainsString( '<button twg-button', $output );
-	}
-
 	public function test_content_placeholder_inserted_static_above_content() {
 		remove_all_filters( 'the_content' );
 
@@ -115,29 +51,26 @@ class Web_TagTest extends TestCase {
 		$this->assertStringContainsString( '<button twg-button', $output );
 	}
 
-	public function test_content_placeholder_inserted_static_below_first_paragraph() {
-		remove_all_filters( 'the_content' );
-
-		$this->web_tag->set_button_placement( 'static_below-first-paragraph' );
-		$this->web_tag->register();
-
-		$this->create_post_and_go_to_it();
-
-		$output = get_echo( 'the_content' );
-
-		$this->assertStringStartsWith( '<p>Hello World</p>', $output );
-		$this->assertStringEndsWith( '<p>Goodbye World</p>', $output );
-		$this->assertStringContainsString( 'Thank with Google snippet added by Site Kit', $output );
-		$this->assertStringContainsString( '<button twg-button', $output );
-	}
-
 	private function create_post_and_go_to_it() {
 		$post_ID = $this->factory()->post->create(
 			array(
+				'post_title'   => 'Test Post',
 				'post_content' => '<p>Hello World</p><p>Goodbye World</p>',
 				'post_status'  => 'publish',
 			)
 		);
 		$this->go_to( get_permalink( $post_ID ) );
+		$this->var_dump_new_line( the_ID() );
+		$this->var_dump_new_line( get_permalink() );
+		$this->var_dump_new_line( get_the_title() );
+		$this->var_dump_new_line( get_the_content() );
+		$this->var_dump_new_line( get_echo( 'the_content' ) );
+	}
+
+	private function var_dump_new_line( $var ) {
+		echo "\n";
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_dump
+		var_dump( $var );
+		echo "\n";
 	}
 }
