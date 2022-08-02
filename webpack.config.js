@@ -44,80 +44,78 @@ const projectPath = ( relativePath ) => {
 };
 
 const manifestSeed = {};
-const manifestArgs = ( mode ) => ( {
-	fileName: projectPath( './dist/manifest.php' ),
-	seed: manifestSeed,
-	generate( seedObj, files ) {
-		const entry = ( filename, hash ) => {
-			if ( mode === 'production' ) {
-				return [ filename, null ];
+const manifestArgs = ( mode ) => {
+	return {
+		fileName:
+			mode === 'production'
+				? projectPath( 'dist/manifest.php' )
+				: projectPath( 'manifest.php' ),
+		seed: manifestSeed,
+		generate( seedObj, files ) {
+			const entry = ( filename, hash ) => {
+				if ( mode === 'production' ) {
+					return [ filename, null ];
+				}
+				return [ filename, hash ];
+			};
+			files.forEach( ( file ) => {
+				if ( file.name.match( /\.css$/ ) ) {
+					// CSS file paths contain the destination directory which needs to be stripped
+					// because the MiniCssExtractPlugin does not have separate
+					// options for `file` and `path` like normal entries.
+					seedObj[ file.chunk.name ] = entry(
+						path.basename( file.path ),
+						file.chunk.contentHash[ 'css/mini-extract' ]
+					);
+				} else if ( file.chunk.name === 'runtime' ) {
+					seedObj[ 'googlesitekit-runtime' ] = entry(
+						file.path,
+						file.chunk.contentHash.javascript
+					);
+				} else if ( file.isInitial ) {
+					// Normal entries.
+					seedObj[ file.chunk.name ] = entry(
+						file.path,
+						file.chunk.contentHash.javascript
+					);
+				}
+			} );
+			return seedObj;
+		},
+		serialize( manifest ) {
+			const handles = Object.keys( manifest ).map( ( key ) =>
+				key.replace( /\.(css|js)$/, '' )
+			);
+			const maxLen = Math.max( ...handles.map( ( key ) => key.length ) );
+
+			function arrayToPHP( values ) {
+				return `array( ${ values
+					.map( ( value ) =>
+						Array.isArray( value )
+							? arrayToPHP( value )
+							: JSON.stringify( value )
+					)
+					.join( ', ' ) } )`;
 			}
-			return [ filename, hash ];
-		};
-		files.forEach( ( file ) => {
-			if ( file.name.match( /\.css$/ ) ) {
-				// CSS file paths contain the destination directory which needs to be stripped
-				// because the MiniCssExtractPlugin does not have separate
-				// options for `file` and `path` like normal entries.
-				seedObj[ file.chunk.name ] = entry(
-					path.basename( file.path ),
-					file.chunk.contentHash[ 'css/mini-extract' ]
-				);
-			} else if ( file.chunk.name === 'runtime' ) {
-				seedObj[ 'googlesitekit-runtime' ] = entry(
-					file.path,
-					file.chunk.contentHash.javascript
-				);
-			} else if (
-				file.chunk.name?.startsWith( 'googlesitekit-components-' )
-			) {
-				// Exception for 'googlesitekit-components' because it's a dynamic asset
-				// with multiple possible file names.
-				seedObj[ 'googlesitekit-components' ] =
-					seedObj[ 'googlesitekit-components' ] || [];
 
-				seedObj[ 'googlesitekit-components' ].push(
-					entry( file.path, file.chunk.contentHash.javascript )
-				);
-			} else if ( file.isInitial ) {
-				// Normal entries.
-				seedObj[ file.chunk.name ] = entry(
-					file.path,
-					file.chunk.contentHash.javascript
-				);
+			function manifestEntryToPHP( [ handle, entry ] ) {
+				const alignment = ''.padEnd( maxLen - handle.length );
+				return `'${ handle }' ${ alignment }=> ${ arrayToPHP(
+					entry
+				) },`;
 			}
-		} );
-		return seedObj;
-	},
-	serialize( manifest ) {
-		const handles = Object.keys( manifest ).map( ( key ) =>
-			key.replace( /\.(css|js)$/, '' )
-		);
-		const maxLen = Math.max( ...handles.map( ( key ) => key.length ) );
 
-		function arrayToPHP( values ) {
-			return `array( ${ values
-				.map( ( value ) =>
-					Array.isArray( value )
-						? arrayToPHP( value )
-						: JSON.stringify( value )
-				)
-				.join( ', ' ) } )`;
-		}
+			const content = manifestTemplate.replace(
+				'{{assets}}',
+				Object.entries( manifest )
+					.map( manifestEntryToPHP )
+					.join( '\n\t' )
+			);
 
-		function manifestEntryToPHP( [ handle, entry ] ) {
-			const alignment = ''.padEnd( maxLen - handle.length );
-			return `'${ handle }' ${ alignment }=> ${ arrayToPHP( entry ) },`;
-		}
-
-		const content = manifestTemplate.replace(
-			'{{assets}}',
-			Object.entries( manifest ).map( manifestEntryToPHP ).join( '\n\t' )
-		);
-
-		return content;
-	},
-} );
+			return content;
+		},
+	};
+};
 
 const manifestTemplate = `<?php
 /**
